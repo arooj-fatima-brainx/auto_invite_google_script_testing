@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <!-- Use a templated HTML printing scriptlet to import common stylesheet -->
+    <?!= HtmlService.createHtmlOutputFromFile('Stylesheet').getContent(); ?>
+</head>
+<body>
+<!-- Below is the HTML code that defines the dialog element structure. -->
+<div>
+    <p>This allows you to create, copy and clear sheets.</p>
+    <div class="block" id="dialog-elements">
+        <label for="dialog-action-select">
+            Select an action to perform:
+        </label>
+        <select class="width-100" id="dialog-action-select">
+            <option value="create">Create a new Sheet</option>
+            <option value="copy">Copy the current Sheet</option>
+            <option value="clear">Clear the current Sheet</option>
+        </select>
+        <label for="column-names-dropdown">
+            Select email address column:
+        </label>
+        <select class="width-100" id="column-names-dropdown"></select>
+    </div>
+    <div class="block" id="dialog-button-bar">
+        <button class="action" id="dialog-execute-button">Execute</button>
+        <button id="dialog-cancel-button" onclick="google.script.host.close()">Cancel</button>
+    </div>
+    <div id="dialog-status"></div>
+</div>
+
+<!-- Use a templated HTML printing scriptlet to import JavaScript. -->
+<?!= HtmlService.createHtmlOutputFromFile('DialogJavaScript').getContent(); ?>
+<script>
+  function initializeDropdownWithColumnNames() {
+    console.log('In column name function');
+    var columnNames = <?!= JSON.stringify(columnNames) ?>;
+    var $dropdown = $('#column-names-dropdown');
+    $.each(columnNames, function(index, name) {
+      $dropdown.append($('<option>', {
+        value: name,
+        text: name
+      }));
+    });
+  }
+
+  function sendEventNotificationByEmail() {
+    var spreadsheetId = '<?= spreadsheetId ?>'; // Get the spreadsheet ID passed from Code.gs
+    var sheetName = "Form Response 1"; // Change to your sheet name
+    google.script.run
+      .withSuccessHandler(function(columnIndex) {
+        console.log("Column Index: " + columnIndex);
+      })
+      .getColumnIndexByName(spreadsheetId, sheetName, "Email Address");
+  }
+
+  //   function getColumnIndexByName(spreadsheetId, sheetName, columnName) {
+  //   var ss = SpreadsheetApp.openById(spreadsheetId);
+  //   var sheet = ss.getSheetByName(sheetName);
+  //   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  //   for (var i = 0; i < headers.length; i++) {
+  //     if (headers[i] == columnName) {
+  //       return i + 1; // Adding 1 because getColumn() is 1-indexed
+  //     }
+  //   }
+  //   // If column name not found, return -1
+  //   return -1;
+  // }
+</script>
+</body>
+
+</html>

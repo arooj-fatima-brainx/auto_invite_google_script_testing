@@ -1,9 +1,9 @@
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
   /**
    * Run initializations on dialog load.
    */
-  $(function() {
+  $(function () {
     $('#dialog-execute-button').click(onExecuteClick);
     initializeDropdownWithColumnNames();
   });
@@ -15,31 +15,8 @@
    * dialog is then closed.
    */
   function onExecuteClick() {
-    // console.log('hello execute')
     console.log('In Executable');
     sendEventNotificationByEmail()
-    // this.disabled = true;
-
-    // // Gather any information that needs to be sent to the server here.
-    // var action = $('#dialog-action-select').val();
-    // showStatus('Working...');
-
-    // // Send the value to the server and handle the response.
-    // google.script.run
-    //     .withSuccessHandler(
-    //       function(msg, element) {
-    //         // Respond to success conditions here.
-    //         showStatus('Execution successful.');
-    //         element.disabled = false;
-    //       })
-    //     .withFailureHandler(
-    //       function(msg, element) {
-    //         // Respond to failure conditions here.
-    //         showStatus('Execution failed: ' + msg, 'error');
-    //         element.disabled = false;
-    //       })
-    //     .withUserObject(this)
-    //     .modifySheets(action);
   }
 
   /**
@@ -56,5 +33,13 @@
     }
   }
 
+  function initializeDropdownWithColumnNames() {
+    var $dropdown = $('#column-names-dropdown');
+    JSON.parse(columnNames).forEach(function (name, index) {
+      $dropdown.append($('<option>', {
+        value: index,
+        text: name
+      }));
+    });
+  }
 </script>
-

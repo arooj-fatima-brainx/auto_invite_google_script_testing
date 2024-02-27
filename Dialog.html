@@ -31,43 +31,22 @@
 </div>
 
 <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
-<?!= HtmlService.createHtmlOutputFromFile('DialogJavaScript').getContent(); ?>
+
 <script>
-  function initializeDropdownWithColumnNames() {
-    console.log('In column name function');
-    var columnNames = <?!= JSON.stringify(columnNames) ?>;
-    var $dropdown = $('#column-names-dropdown');
-    $.each(columnNames, function(index, name) {
-      $dropdown.append($('<option>', {
-        value: name,
-        text: name
-      }));
-    });
-  }
 
   function sendEventNotificationByEmail() {
     var spreadsheetId = '<?= spreadsheetId ?>'; // Get the spreadsheet ID passed from Code.gs
     var sheetName = "Form Response 1"; // Change to your sheet name
     google.script.run
-      .withSuccessHandler(function(columnIndex) {
+      .withSuccessHandler(function (columnIndex) {
         console.log("Column Index: " + columnIndex);
       })
       .getColumnIndexByName(spreadsheetId, sheetName, "Email Address");
   }
 
-  //   function getColumnIndexByName(spreadsheetId, sheetName, columnName) {
-  //   var ss = SpreadsheetApp.openById(spreadsheetId);
-  //   var sheet = ss.getSheetByName(sheetName);
-  //   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  //   for (var i = 0; i < headers.length; i++) {
-  //     if (headers[i] == columnName) {
-  //       return i + 1; // Adding 1 because getColumn() is 1-indexed
-  //     }
-  //   }
-  //   // If column name not found, return -1
-  //   return -1;
-  // }
+  var columnNames = <?= JSON.stringify(columnNames) ?>;
 </script>
+<?!= HtmlService.createHtmlOutputFromFile('DialogJavaScript').getContent(); ?>
 </body>
 
 </html>

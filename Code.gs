@@ -35,7 +35,7 @@ function showDialog() {
   var columnNames = getColumnNames(); // Get the column names
   var spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
   var template = HtmlService.createTemplateFromFile('Dialog');
-  template.columnNames = columnNames; // Pass column names to the template
+  template.columnNames = columnNames;
   template.spreadsheetId = spreadsheetId; // Pass the spreadsheet ID to the template
   var html = template.evaluate().setWidth(400).setHeight(300);
   SpreadsheetApp.getUi().showModalDialog(html, DIALOG_TITLE);

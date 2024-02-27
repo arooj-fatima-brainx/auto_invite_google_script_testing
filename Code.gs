@@ -31,7 +31,6 @@ function onOpen(e) {
 }
 
 function showDialog() {
-  console.log('in show dialog');
   var columnNames = getColumnNames(); // Get the column names
   var spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
   var template = HtmlService.createTemplateFromFile('Dialog');
@@ -49,14 +48,17 @@ function getColumnNames() {
   return columnNames;
 }
 
-function getColumnIndexByName(spreadsheetId, sheetName, columnName) {
-  var sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName(sheetName);
+function getColumnData(columnName) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  for (var i = 0; i < headers.length; i++) {
-    if (headers[i] == columnName) {
-      return i + 1; // Adding 1 because getColumn() is 1-indexed
-    }
+
+  var columnIndex;
+  if (headers.indexOf(columnName) !== -1) {
+    columnIndex = headers.indexOf(columnName);
+  } else {
+    columnIndex = 0;
   }
-  // If column name not found, return -1
-  return -1;
+  var dataRange = sheet.getRange(2, columnIndex + 1, sheet.getLastRow() - 1, 1);
+  var columnData = dataRange.getValues().flat();
+  return columnData;
 }

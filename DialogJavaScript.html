@@ -14,9 +14,8 @@
    * sheet, clear the active sheet) and asks the server to execute it. The
    * dialog is then closed.
    */
-  function onExecuteClick() {
-    console.log('In Executable');
-    sendEventNotificationByEmail()
+  async function onExecuteClick() {
+    var emailsArray = await getData($('#column-names-dropdown').val());
   }
 
   /**
@@ -37,9 +36,18 @@
     var $dropdown = $('#column-names-dropdown');
     JSON.parse(columnNames).forEach(function (name, index) {
       $dropdown.append($('<option>', {
-        value: index,
+        value: name,
         text: name
       }));
+    });
+  }
+
+  async function getData(index) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .getColumnData(index);
     });
   }
 </script>

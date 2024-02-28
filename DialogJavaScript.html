@@ -4,6 +4,7 @@
    * Run initializations on dialog load.
    */
   $(function () {
+    addImgaeSource();
     $('#dialog-execute-button').click(onExecuteClick);
     initializeDropdownWithColumnNames();
   });
@@ -15,7 +16,7 @@
    * dialog is then closed.
    */
   async function onExecuteClick() {
-    var emailsArray = await getData($('#column-names-dropdown').val());
+    var emailsArray = await getData($('#emailAddressColumn').val());
   }
 
   /**
@@ -33,7 +34,7 @@
   }
 
   function initializeDropdownWithColumnNames() {
-    var $dropdown = $('#column-names-dropdown');
+    var $dropdown = $('#emailAddressColumn');
     JSON.parse(columnNames).forEach(function (name, index) {
       $dropdown.append($('<option>', {
         value: name,
@@ -49,5 +50,29 @@
         .withFailureHandler(reject)
         .getColumnData(index);
     });
+  }
+
+  function addImgaeSource() {
+    google.script.run.withSuccessHandler(function (base64ImageData) {
+      document.getElementById('calendarEventIdExample').src = 'data:image/png;base64,' + base64ImageData;
+    }).getBase64ImageData();
+  }
+
+  // When the user clicks on the link, open the modal
+  document.querySelector('a[href="#eventIdGuideModal"]').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default anchor action
+    document.getElementById('eventIdGuideModal').style.display = 'block';
+  });
+
+  // When the user clicks on <span> (x), close the modal
+  document.querySelector('.close').addEventListener('click', function () {
+    document.getElementById('eventIdGuideModal').style.display = 'none';
+  });
+
+  // Optional: Close the modal if the user clicks anywhere outside of the modal content
+  window.onclick = function (event) {
+    if (event.target == document.getElementById('eventIdGuideModal')) {
+      document.getElementById('eventIdGuideModal').style.display = 'none';
+    }
   }
 </script>

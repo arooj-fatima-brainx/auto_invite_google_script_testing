@@ -6,28 +6,39 @@
     <?!= HtmlService.createHtmlOutputFromFile('Stylesheet').getContent(); ?>
 </head>
 <body>
-<!-- Below is the HTML code that defines the dialog element structure. -->
-<div>
-    <p>This allows you to create, copy and clear sheets.</p>
-    <div class="block" id="dialog-elements">
-        <label for="dialog-action-select">
-            Select an action to perform:
-        </label>
-        <select class="width-100" id="dialog-action-select">
-            <option value="create">Create a new Sheet</option>
-            <option value="copy">Copy the current Sheet</option>
-            <option value="clear">Clear the current Sheet</option>
-        </select>
-        <label for="column-names-dropdown">
-            Select email address column:
-        </label>
-        <select class="width-100" id="column-names-dropdown"></select>
+
+<div class="container">
+    <form id="autoInviteForm">
+        <div class="form-group">
+            <label for="emailAddressColumn">Email Address Column</label>
+            <select id="emailAddressColumn" name="emailAddressColumn"></select>
+        </div>
+        <div class="form-group">
+            <label for="eventOwnerEmail">Event Owner Account Email</label>
+            <input type="email" id="eventOwnerEmail" name="eventOwnerEmail" required>
+        </div>
+        <div class="form-group">
+            <label for="eventId">Event ID</label>
+            <input type="text" id="eventId" name="eventId" required>
+            <a href="#eventIdGuideModal" id="findEventIdLink">How do I find my Calendar Event ID?</a>
+        </div>
+        <div class="form-group">
+            <label for="testEmail">Test Email</label>
+            <input type="email" id="testEmail" name="testEmail" required>
+        </div>
+        <button type="button" id="sendTestInvitation">Send Test Invitation</button>
+        <button type="submit">Complete Auto-invite Setup</button>
+    </form>
+</div>
+
+<!-- Event ID Help Modal -->
+<div id="eventIdGuideModal" class="modal">
+    <div class="modal-content">
+        <a href="#" class="close">&times;</a>
+        <p>You can find your Calendar Event ID by going into full edit view of the calendar event and grabbing the ID
+            from the URL, including everything after the final "/" as shown in the highlight below:</p>
+        <img id="calendarEventIdExample" alt="Calendar Event ID Example" height="300" width="400">
     </div>
-    <div class="block" id="dialog-button-bar">
-        <button class="action" id="dialog-execute-button">Execute</button>
-        <button id="dialog-cancel-button" onclick="google.script.host.close()">Cancel</button>
-    </div>
-    <div id="dialog-status"></div>
 </div>
 
 <!-- Use a templated HTML printing scriptlet to import JavaScript. -->

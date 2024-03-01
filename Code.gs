@@ -62,3 +62,44 @@ function getColumnData(columnName) {
   var columnData = dataRange.getValues().flat();
   return columnData;
 }
+
+function sendInvitation(calendarId, eventId, attendeeEmails) {
+  try {
+    var calendar = CalendarApp.getCalendarById(calendarId);
+    if (!calendar) {
+      throw new Error('Calendar not found');
+    }
+
+    var eveId =  decodeBase64(eventId).split(' ')[0];
+    var event = Calendar.Events.get(calendarId, eveId);
+    if (!event) {
+      throw new Error('event not found');
+    }
+
+    if (!event.attendees) {
+      event.attendees = [];
+    }
+
+    attendeeEmails.forEach(function(email) {
+      var isEmailPresent = event.attendees.some(function(attendee) {
+        return attendee.email === email;
+      });
+      if (!isEmailPresent) {
+        event.attendees.push({ email: email });
+      }
+    });
+    event = Calendar.Events.patch(event, calendarId, eveId, {
+      sendNotifications: true
+    });
+
+    return "SUCCESS";
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
+function decodeBase64(encodedString) {
+   var decodedBytes = Utilities.base64Decode(encodedString);
+  var decodedString = Utilities.newBlob(decodedBytes).getDataAsString("UTF-8");
+  return decodedString;
+}

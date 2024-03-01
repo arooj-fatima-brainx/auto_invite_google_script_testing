@@ -5,6 +5,7 @@
    */
   $(function () {
     addImgaeSource();
+    $('#sendTestInvitation').click(sendTestInvitation)
     $('#dialog-execute-button').click(onExecuteClick);
     initializeDropdownWithColumnNames();
   });
@@ -50,6 +51,27 @@
         .withFailureHandler(reject)
         .getColumnData(index);
     });
+  }
+
+  function sendTestInvitation() {
+    var calendarId = $('#calendarId').val();
+    var eventId = $('#eventId').val();
+    var testEmail = $('#testEmail').val();
+    var testEmailArray = [];
+    if (testEmail !== '') {
+      testEmailArray.push(testEmail);
+    }
+
+    if (!calendarId || !eventId || testEmailArray.length == 0) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    google.script.run.withSuccessHandler(function () {
+      alert("Test Invitation sent successfully");
+    }).withFailureHandler(function (error) {
+      alert(error.message);
+    }).sendInvitation(calendarId, eventId, testEmailArray);
   }
 
   function addImgaeSource() {

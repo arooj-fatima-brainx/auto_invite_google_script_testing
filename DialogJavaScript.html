@@ -5,9 +5,10 @@
    */
   $(function () {
     addImgaeSource();
-    $('#sendTestInvitation').click(sendTestInvitation)
-    $('#dialog-execute-button').click(onExecuteClick);
+    $('#sendTestInvitationButton').click(sendTestInvitation);
     initializeDropdownWithColumnNames();
+    $('#completeSetupButton').click(completeSetup);
+    $('#dialog-execute-button').click(onExecuteClick);
   });
 
   /**
@@ -17,7 +18,24 @@
    * dialog is then closed.
    */
   async function onExecuteClick() {
-    var emailsArray = await getData($('#emailAddressColumn').val());
+    let emailsArray = await getData($('#emailAddressColumn').val());
+  }
+
+  async function completeSetup() {
+    let emailsArray = []
+    emailsArray = await getData($('#emailAddressColumn').val());
+    var calendarId = $('#calendarId').val();
+    var eventId = $('#eventId').val();
+    if (!calendarId || !eventId || !emailsArray || emailsArray.length == 0) {
+      alert("Please fill required fields");
+      return;
+    }
+
+    google.script.run.withSuccessHandler(function () {
+      alert("Auto Invite setup completed successfully");
+    }).withFailureHandler(function (error) {
+      alert(error.message);
+    }).sendInvitation(calendarId, eventId, emailsArray);
   }
 
   /**
@@ -63,7 +81,7 @@
     }
 
     if (!calendarId || !eventId || testEmailArray.length == 0) {
-      alert("Please fill all fields");
+      alert("Please fill required fields");
       return;
     }
 

@@ -1,93 +1,70 @@
-var DIALOG_TITLE = 'Auto Invite Setup';
+const APP_TITLE = 'Auto Invite Setup';
+var spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
+var userProperties = PropertiesService.getUserProperties();
+var activeSheet = spreadSheet.getActiveSheet();
 
-function showPrompt() {
-  var ui = SpreadsheetApp.getUi(); // Same variations.
-
-  var result = ui.prompt(
-    'Let\'s get to know each other!',
-    'Please enter your name:',
-    ui.ButtonSet.OK_CANCEL);
-
-  // Process the user's response.
-  var button = result.getSelectedButton();
-  var text = result.getResponseText();
-  if (button == ui.Button.OK) {
-    // User clicked "OK".
-    ui.alert('Your name is ' + text + '.');
-  } else if (button == ui.Button.CANCEL) {
-    // User clicked "Cancel".
-    ui.alert('I didn\'t get your name.');
-  } else if (button == ui.Button.CLOSE) {
-    // User clicked X in the title bar.
-    ui.alert('You closed the dialog.');
-  }
-}
-
-function onOpen(e) {
+function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu('Menu')
-    .addItem('Show dialog', 'showDialog')
+    .createMenu('Auto Invite App')
+    .addItem('Set Invites Configurations', 'showInviteSetupModal')
     .addToUi();
 }
 
-function showDialog() {
-  var columnNames = getColumnNames(); // Get the column names
-  var spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
-  var template = HtmlService.createTemplateFromFile('Dialog');
-  template.columnNames = columnNames;
-  template.spreadsheetId = spreadsheetId; // Pass the spreadsheet ID to the template
-  var html = template.evaluate().setWidth(800).setHeight(700);
-  SpreadsheetApp.getUi().showModalDialog(html, DIALOG_TITLE);
+function showInviteSetupModal() {
+  var html = HtmlService.createTemplateFromFile('SetupDialog').evaluate().setWidth(600).setHeight(460);
+  SpreadsheetApp.getUi().showModalDialog(html, APP_TITLE);
 }
 
-function getColumnNames() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet();
-  const range = sheet.getDataRange();
-  const values = range.getValues();
-  const columnNames = values[0]; // Assumes the first row contains column names
-  return columnNames;
+function checkAutoInviteSetup() {
+  var value = userProperties.getProperty("eventId");
+  return value != null;
 }
 
-function getColumnData(columnName) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-
-  var columnIndex;
-  if (headers.indexOf(columnName) !== -1) {
-    columnIndex = headers.indexOf(columnName);
-  } else {
-    columnIndex = 0;
+function getColumnNamesWithReferences() {
+  var firstRowValues = activeSheet.getRange(1, 1, 1, activeSheet.getLastColumn()).getValues()[0];
+  let columnNamesWithReferences = [];
+  for (let i = 0; i < firstRowValues.length; i++) {
+    columnNamesWithReferences.push({ name: firstRowValues[i], reference: String.fromCharCode(65 + i) });
   }
-  var dataRange = sheet.getRange(2, columnIndex + 1, sheet.getLastRow() - 1, 1);
-  var columnData = dataRange.getValues().flat();
-  return columnData;
+  return columnNamesWithReferences;
 }
 
-function sendInvitation(calendarId, eventId, attendeeEmails) {
-  try {
-    var calendar = CalendarApp.getCalendarById(calendarId);
-    if (!calendar) {
-      throw new Error('Calendar not found');
-    }
+function getEmailColumnData(columnReference) {
+ try {
+    let range = activeSheet.getRange(`${columnReference}2:${columnReference}${activeSheet.getLastRow()}`);
+    let emails = range.getValues().flat();
+    emails = emails.filter((email) => {
+      if(isEmail(email)){
+        return email;
+      }
+    });
+    return emails;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
 
-    var eveId =  decodeBase64(eventId).split(' ')[0];
+function sendInvitation(eventId, attendeeEmails) {
+  try {
+    let calendarId = getCurrentUserEmail();
+    let eveId =  decodeBase64(eventId).split(' ')[0];
     var event = Calendar.Events.get(calendarId, eveId);
+
     if (!event) {
-      throw new Error('event not found');
+      throw new Error(`Since the Calendar Event you're linking to is owned by someone else, they'll need to first add your email ${calendarId} as a guest on the Calendar Event. Once you're listed as a guest on the Calendar, this app will be able to successfully send out invites.`);
     }
 
     if (!event.attendees) {
       event.attendees = [];
     }
 
-    attendeeEmails.forEach(function(email) {
-      var isEmailPresent = event.attendees.some(function(attendee) {
-        return attendee.email === email;
-      });
-      if (!isEmailPresent) {
-        event.attendees.push({ email: email });
+    attendeeEmails.forEach((email) => {
+      if(!isEmail(email) || event.attendees.includes(email)){
+        return
       }
+      event.attendees.push({ email: email });
     });
+
     event = Calendar.Events.patch(event, calendarId, eveId, {
       sendNotifications: true
     });
@@ -98,8 +75,69 @@ function sendInvitation(calendarId, eventId, attendeeEmails) {
   }
 }
 
+function handleFormSubmitEvent(e){
+  let refCol = userProperties.getProperty("emailReferenceColumn")
+  let eventId = userProperties.getProperty("eventId")
+
+  if ( refCol && eventId){
+    let emailsArray = []
+    emailsArray.push(activeSheet.getRange(`${refCol}${e.range.getRow()}`).getValue());
+    sendInvitation(eventId, emailsArray);
+  }
+}
+
+// helper methods
+
+function createFormSubmitTrigger() {
+  try {
+    let trigger = ScriptApp.newTrigger('handleFormSubmitEvent')
+      .forSpreadsheet(spreadSheet)
+      .onFormSubmit()
+      .create();
+    userProperties.setProperty("triggerId", trigger.getUniqueId());
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
+function deleteFormSubmitTrigger() {
+    try {
+      let allTriggers = ScriptApp.getProjectTriggers();
+      let triggerId = userProperties.getProperty("triggerId");
+        for (let i = 0; i < allTriggers.length; i++) {
+          let trigger = allTriggers[i];
+          if (trigger.getUniqueId() === triggerId) {
+            ScriptApp.deleteTrigger(trigger);
+            return;
+          }
+        }
+      } catch(error) {
+      throw new Error(error.message);
+    }
+}
+
+function storeEventInfo(eventId, emailReferenceColumn){
+  userProperties.setProperty("eventId", eventId);
+  userProperties.setProperty("emailReferenceColumn", emailReferenceColumn);
+}
+
+function removeEventInfo() {
+  userProperties.deleteProperty("eventId");
+  userProperties.deleteProperty("emailReferenceColumn");
+  userProperties.deleteProperty("triggerId");
+}
+
+function getCurrentUserEmail() {
+  return Session.getActiveUser().getEmail();;
+}
+
 function decodeBase64(encodedString) {
-   var decodedBytes = Utilities.base64Decode(encodedString);
-  var decodedString = Utilities.newBlob(decodedBytes).getDataAsString("UTF-8");
+  let decodedBytes = Utilities.base64Decode(encodedString);
+  let decodedString = Utilities.newBlob(decodedBytes).getDataAsString("UTF-8");
   return decodedString;
+}
+
+function isEmail(email) {
+  let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
 }

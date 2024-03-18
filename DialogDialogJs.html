@@ -1,0 +1,197 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+  $(function () {
+    initialSetup();
+  });
+
+  function initialSetup(){
+    addImgaeSource();
+    $('#sendTestInvitationButton').click(sendTestInvitation);
+    $('#completeSetupButton').click(completeAutoInviteSetup);
+    $('#cancelAutoInviteButton').click(getConfirmation);
+
+    google.script.run.withSuccessHandler((result)=>{
+      if (result){
+        hideSection("loader-section");
+        hideSection("setupSection")
+        showSection('cancelTriggerSection');
+      }
+      else{
+        initializeDropdownWithColumnNames();
+        hideSection("loader-section");
+        hideSection('cancelTriggerSection');
+        showSection("setupSection")
+      }
+    }).withFailureHandler(function (error) {
+      alert(error.message);
+    }).checkAutoInviteSetup();
+  }
+
+  function sendTestInvitation() {
+    let eventId = $('#eventId').val();
+    let testEmail = $('#testEmail').val();
+
+    if (!eventId || !testEmail) {
+      alert("Please fill required fields");
+      return;
+    }
+    let testEmailArray = [];
+    testEmailArray.push(testEmail);
+    sendInvitationToAttendees(eventId, testEmailArray, "Test invitation sent successfully")
+  }
+
+  async function completeAutoInviteSetup() {
+    let selectedColumnName = $('#emailAddressColumn').val();
+    let emailsArray = await getAttendeesEmailList(selectedColumnName);
+
+    var eventId = $('#eventId').val();
+    if (!eventId) {
+      alert("Please fill required fields");
+      return;
+    }
+    showSection("loader-section");
+    hideSection("setupSection")
+
+    await setFormSubmitTrigger();
+    await setEventInfo(eventId ,selectedColumnName);
+
+    let message = "Auto-invite Setup Complete!  Any new respondents will now automatically receive a calendar invite to the connected event!"
+    hideSection("loader-section");
+    showSection("success-screen");
+
+    if (emailsArray.length > 0) {
+      sendInvitationToAttendees(eventId, emailsArray, message)
+    } else {
+      alert(message);
+    }
+  }
+
+  async function cancelAutoInviteSetup() {
+    showSection("loader-section");
+    hideSection("cancelTriggerSection");
+    await removeFormSubmitTrigger();
+    await removeEventInfo();
+    showSection("success-screen");
+    hideSection("loader-section");
+    alert("Auto Invite Cancelled Successfully.")
+    closeModal();
+  }
+
+  //helper methods
+
+  function setFormSubmitTrigger() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .createFormSubmitTrigger();
+    });
+  }
+
+  function removeFormSubmitTrigger() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .deleteFormSubmitTrigger();
+    });
+  }
+
+  function removeEventInfo() {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .removeEventInfo();
+    });
+  }
+
+  function setEventInfo(eventId, selectedColumnName) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .storeEventInfo(eventId, selectedColumnName);
+    });
+  }
+
+
+  function hideSection(elementId){
+    document.getElementById(`${elementId}`).classList.add("d-none")
+  }
+
+  function showSection(elementId){
+    document.getElementById(`${elementId}`).classList.remove("d-none")
+  }
+
+  function addImgaeSource() {
+    let calendarEventImage = document.getElementById('calendarEventIdExample')
+    if (calendarEventImage.src){
+      return
+    }
+    google.script.run.withSuccessHandler(function (base64ImageData) {
+      calendarEventImage.src = 'data:image/png;base64,' + base64ImageData;
+    }).getBase64ImageData();
+  }
+
+  function initializeDropdownWithColumnNames() {
+    var $dropdown = $('#emailAddressColumn');
+    google.script.run.withSuccessHandler((result)=>{
+      if (result.length > 0){
+        result.forEach(function (column) {
+          $dropdown.append($('<option>', {
+            value: column.reference,
+            text: column.name
+          }));
+        });
+      }
+      else{
+        alert("No column data found");
+      }
+    }).withFailureHandler(function (error) {
+      alert(error.message);
+    }).getColumnNamesWithReferences();
+  }
+
+  function sendInvitationToAttendees(eventId, emailsArray, message){
+    google.script.run.withSuccessHandler(() =>{
+      alert(message);
+    }).withFailureHandler(function (error) {
+      alert(error.message);
+    }).sendInvitation(eventId, emailsArray);
+  }
+
+  async function getAttendeesEmailList(columnRef) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .getEmailColumnData(columnRef);
+    });
+  }
+
+  function getConfirmation() {
+    if (confirm("Are you sure you want to cancel Auto Invite Setup?")) {
+      cancelAutoInviteSetup();
+    }
+  }
+
+  function closeModal() {
+    google.script.host.close();
+  }
+
+  document.querySelector('a[href="#eventIdGuideModal"]').addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default anchor action
+    document.getElementById('eventIdGuideModal').style.display = 'block';
+  });
+
+  document.querySelector('.close').addEventListener('click', function () {
+    document.getElementById('eventIdGuideModal').style.display = 'none';
+  });
+
+  window.onclick = function (event) {
+    if (event.target == document.getElementById('eventIdGuideModal')) {
+      document.getElementById('eventIdGuideModal').style.display = 'none';
+    }
+  }
+</script>

@@ -1,17 +1,13 @@
-<!-- This CSS package applies Google styling; it should always be included. -->
-<!-- <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css"> -->
-
 <style>
     body {
         font-family: Arial, sans-serif !important;
     }
 
     .container {
-        max-width: 600px;
-        margin: 20px auto;
         padding: 20px;
         border: 1px solid #ccc;
         border-radius: 5px;
+        height: auto;
     }
 
     .container .form-group {
@@ -35,9 +31,9 @@
         box-sizing: border-box;
     }
 
-    .container button {
+    button {
         cursor: pointer;
-        background-color: #4CAF50;
+        background-color: #1a73e8;
         color: white;
         padding: 14px 20px;
         margin: 8px 0;
@@ -45,11 +41,6 @@
         border-radius: 4px;
     }
 
-    button:hover {
-        background-color: #45a049;
-    }
-
-    /* Modal CSS */
     .modal {
         display: none;
         position: fixed;
@@ -106,5 +97,93 @@
 
     #findEventIdLink {
         font-size: 14px;
+    }
+
+    .invite-setup-form {
+        text-align: center;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .w-100 {
+        width: 100%;
+    }
+
+    #cancelAutoInviteButton {
+        background-color: red;
+    }
+
+    .d-none{
+        display: none !important;
+    }
+
+    .mt-20{
+        margin-top: 20px;
+    }
+
+    .text-danger{
+        color: red;
+    }
+
+    .font-13{
+        font-size: 13px;
+    }
+
+
+    // Loader
+
+       .loader-container {
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           height: 90vh;
+       }
+
+    /* Spinner animation */
+    .loader {
+        border: 5px solid #1a73e8;
+        border-radius: 50%;
+        border-top: 5px solid #f8f9fa;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .tick {
+        width: 150px;
+        height: 150px;
+        border: 2px solid #28a745;
+        border-radius: 50%;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .tick::before {
+        content: '';
+        width: 70%;
+        height: 35%;
+        border-bottom: 5px solid #28a745;
+        border-left: 5px solid #28a745;
+        transform: rotate(-45deg);
+        position: absolute;
+    }
+
+    .flex-justify-content-center{
+        display:flex;
+        height: 85vh;
+        justify-content: center;
+        align-items: center;
     }
 </style>
